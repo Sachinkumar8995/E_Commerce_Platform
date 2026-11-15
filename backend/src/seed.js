@@ -37,6 +37,8 @@ const demoProducts = [
   { name: 'Court Tennis Racket', category: 'Sports', price: 79.00, brand: 'Baseline', image: 'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=900&q=85', description: 'A balanced racket designed for confident rallies and comfortable control.' },
 ];
 
+const catalogOnly = process.argv.includes('--catalog-only');
+
 const seed = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -69,15 +71,17 @@ const seed = async () => {
       }
     }));
 
-    const demoUsers = [
-      { name: 'Admin User', email: 'admin@example.com', password: 'Admin123!', role: 'admin' },
-      { name: 'Demo Customer', email: 'user@example.com', password: 'User123!', role: 'customer' },
-    ];
-    for (const user of demoUsers) {
-      if (!await User.exists({ email: user.email })) await User.create(user);
+    if (!catalogOnly) {
+      const demoUsers = [
+        { name: 'Admin User', email: 'admin@example.com', password: 'Admin123!', role: 'admin' },
+        { name: 'Demo Customer', email: 'user@example.com', password: 'User123!', role: 'customer' },
+      ];
+      for (const user of demoUsers) {
+        if (!await User.exists({ email: user.email })) await User.create(user);
+      }
     }
 
-    console.log(`Seed complete: ${categories.length} categories, ${demoProducts.length} catalog products with images, demo accounts created if missing.`);
+    console.log(`Seed complete: ${categories.length} categories, ${demoProducts.length} catalog products with images${catalogOnly ? '.' : ', demo accounts created if missing.'}`);
     await mongoose.disconnect();
   } catch (error) {
     console.error('Seed error:', error);

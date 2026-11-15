@@ -36,6 +36,7 @@ Requirements: Node.js 18+, npm, and MongoDB 6+ running locally. Example connecti
    Open `http://localhost:3000`. The development server proxies `/api` to port 5000. To override it, copy `frontend/.env.example` to `frontend/.env` and set `REACT_APP_API_URL`.
 
 Seed is repeatable and non-destructive: it updates the 20 known demo products (including names and image URLs) while preserving their current stock, and never deletes users, carts or orders.
+To import only the demo categories and products into a configured database, run `npm run seed -- --catalog-only` from `backend/`; this does not create demo accounts.
 
 ### Demo accounts
 
