@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiArrowRight, FiShoppingBag } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import api from '../services/api';
+import api, { getCategories } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import ProductCard from '../components/ProductCard';
 import Loader from '../components/Loader';
@@ -24,12 +24,12 @@ const HomePage = () => {
         setLoading(true);
         const [prodRes, catRes] = await Promise.all([
           api.get('/products?limit=8&sortBy=createdAt&order=desc'),
-          api.get('/categories'),
+          getCategories(),
         ]);
         setProducts(prodRes.data.products || []);
-        setCategories(catRes.data || []);
+        setCategories(catRes);
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load data');
+        setError(err.response?.data?.message || err.message || 'Failed to load data');
       } finally {
         setLoading(false);
       }

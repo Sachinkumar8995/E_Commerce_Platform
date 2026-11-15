@@ -39,3 +39,14 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+export const getCategories = async () => {
+  const { data } = await api.get('/categories');
+  const categories = Array.isArray(data) ? data : data?.categories;
+
+  if (!Array.isArray(categories)) {
+    throw new Error('Unexpected response from categories API');
+  }
+
+  return categories;
+};

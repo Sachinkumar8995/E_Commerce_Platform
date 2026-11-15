@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { FiFilter, FiX } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import api from '../services/api';
+import api, { getCategories } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import ProductCard from '../components/ProductCard';
 import Pagination from '../components/Pagination';
@@ -41,7 +41,11 @@ const ProductListPage = () => {
 
   // Fetch categories once
   useEffect(() => {
-    api.get('/categories').then((res) => setCategories(res.data || [])).catch(() => {});
+    getCategories()
+      .then(setCategories)
+      .catch((err) => {
+        toast.error(err.response?.data?.message || err.message || 'Failed to load categories');
+      });
   }, []);
 
   // Fetch products whenever URL params change
