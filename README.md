@@ -66,7 +66,7 @@ Change these before using any publicly reachable deployment. Demo payment is sim
 | `NODE_ENV` | `development` | Error/logging environment |
 | `TAX_RATE` | `0.1` | Tax fraction (for example `0.1` = 10%) |
 | `SHIPPING_FLAT_RATE` | `5.99` | Shipping amount; orders at/above $100 ship free |
-| `REACT_APP_API_URL` | `/api` | Frontend API base URL |
+| `REACT_APP_API_URL` | `/api` in development; deployed API URL in production | Frontend API base URL override |
 
 ## Tests and build
 
