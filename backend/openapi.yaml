@@ -1,0 +1,297 @@
+openapi: 3.0.3
+info:
+  title: ShopEase Commerce API
+  version: 1.0.0
+  description: REST API for the ShopEase local demo store. Payment is simulated; no card data is accepted.
+servers:
+  - url: http://localhost:5000/api
+tags:
+  - name: Auth
+  - name: Catalogue
+  - name: Cart
+  - name: Orders
+  - name: Admin
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+    Address:
+      type: object
+      required: [address, city, postalCode, country]
+      properties:
+        address: { type: string }
+        city: { type: string }
+        postalCode: { type: string }
+        country: { type: string }
+    Order:
+      type: object
+      properties:
+        _id: { type: string }
+        status:
+          type: string
+          enum: [placed, paid, packed, shipped, delivered, cancelled]
+        totalPrice: { type: number }
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200': { description: Service is ready }
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+      responses:
+        '201': { description: Customer registered }
+        '400': { description: Invalid input }
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and receive a bearer token
+      responses:
+        '200': { description: Authenticated }
+        '401': { description: Invalid credentials }
+  /auth/profile:
+    get:
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      summary: Read the current profile and address book
+      responses:
+        '200': { description: Profile }
+    put:
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      summary: Update profile
+      responses:
+        '200': { description: Updated profile }
+  /auth/address:
+    put:
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      summary: Add or update an address
+      responses:
+        '200': { description: Address book }
+  /products:
+    get:
+      tags: [Catalogue]
+      summary: Search, filter, sort and paginate products
+      parameters:
+        - { in: query, name: q, schema: { type: string } }
+        - { in: query, name: category, description: Category name or ID; comma-separated values supported, schema: { type: string } }
+        - { in: query, name: minPrice, schema: { type: number, minimum: 0 } }
+        - { in: query, name: maxPrice, schema: { type: number, minimum: 0 } }
+        - { in: query, name: sort, schema: { type: string, enum: [price-asc, price-desc, rating-desc, createdAt-desc] } }
+        - { in: query, name: page, schema: { type: integer, minimum: 1 } }
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 100 } }
+      responses:
+        '200': { description: Product page }
+    post:
+      tags: [Catalogue]
+      security: [{ bearerAuth: [] }]
+      summary: Create a product (admin)
+      responses:
+        '201': { description: Product created }
+        '403': { description: Admin role required }
+  /products/{id}:
+    get:
+      tags: [Catalogue]
+      summary: Get a product detail
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Product detail }
+        '404': { description: Product not found }
+    put:
+      tags: [Catalogue]
+      security: [{ bearerAuth: [] }]
+      summary: Update product fields or inventory (admin)
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Product updated }
+        '403': { description: Admin role required }
+    delete:
+      tags: [Catalogue]
+      security: [{ bearerAuth: [] }]
+      summary: Deactivate product (admin)
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Product deactivated }
+  /categories:
+    get:
+      tags: [Catalogue]
+      summary: List active categories
+      responses:
+        '200': { description: Categories }
+    post:
+      tags: [Catalogue]
+      security: [{ bearerAuth: [] }]
+      summary: Create category (admin)
+      responses:
+        '201': { description: Category created }
+  /categories/{id}:
+    put:
+      tags: [Catalogue]
+      security: [{ bearerAuth: [] }]
+      summary: Update category (admin)
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Category updated }
+    delete:
+      tags: [Catalogue]
+      security: [{ bearerAuth: [] }]
+      summary: Delete category (admin)
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Category deleted }
+  /cart:
+    get:
+      tags: [Cart]
+      security: [{ bearerAuth: [] }]
+      summary: Read the current cart
+      responses:
+        '200': { description: Cart }
+    post:
+      tags: [Cart]
+      security: [{ bearerAuth: [] }]
+      summary: Add product to cart
+      responses:
+        '201': { description: Updated cart }
+  /cart/{itemId}:
+    put:
+      tags: [Cart]
+      security: [{ bearerAuth: [] }]
+      summary: Set a cart item quantity
+      parameters:
+        - { in: path, name: itemId, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Cart updated }
+        '409': { description: Quantity unavailable }
+    delete:
+      tags: [Cart]
+      security: [{ bearerAuth: [] }]
+      summary: Remove a cart item
+      parameters:
+        - { in: path, name: itemId, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Cart updated }
+  /orders:
+    get:
+      tags: [Orders]
+      security: [{ bearerAuth: [] }]
+      summary: List current customer's orders
+      responses:
+        '200': { description: Paginated orders }
+    post:
+      tags: [Orders]
+      security: [{ bearerAuth: [] }]
+      summary: Place an order from the cart
+      parameters:
+        - in: header
+          name: X-Idempotency-Key
+          schema: { type: string, maxLength: 128 }
+          description: Reuse the same key for retries of one checkout attempt.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shippingAddress]
+              properties:
+                shippingAddress: { $ref: '#/components/schemas/Address' }
+      responses:
+        '201': { description: Order placed }
+        '200': { description: Existing order returned for an idempotent retry }
+        '409': { description: Stock conflict }
+  /orders/{id}/pay:
+    put:
+      tags: [Orders]
+      security: [{ bearerAuth: [] }]
+      summary: Simulate payment; pass success=false to test a failure
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Payment succeeded }
+        '402': { description: Simulated payment failed; order remains placed }
+  /orders/{id}:
+    get:
+      tags: [Orders]
+      security: [{ bearerAuth: [] }]
+      summary: Get order details (owner or admin)
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Order details }
+        '403': { description: Not authorized }
+  /orders/{id}/cancel:
+    put:
+      tags: [Orders]
+      security: [{ bearerAuth: [] }]
+      summary: Cancel an eligible order and release reserved stock
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Order cancelled }
+        '403': { description: Not the order owner }
+  /admin/dashboard:
+    get:
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      summary: Sales and order summary (admin)
+      responses:
+        '200': { description: Dashboard aggregates }
+        '403': { description: Admin role required }
+  /admin/customers:
+    get:
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      summary: Paginated customer directory (admin)
+      responses:
+        '200': { description: Customers }
+  /admin/audit-log:
+    get:
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      summary: Paginated material-action audit events (admin)
+      responses:
+        '200': { description: Audit events }
+  /orders/admin/all:
+    get:
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      summary: List all orders with optional status filter (admin)
+      responses:
+        '200': { description: Paginated orders }
+  /orders/{id}/status:
+    put:
+      tags: [Admin]
+      security: [{ bearerAuth: [] }]
+      summary: Advance order state (admin)
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Status advanced }
+        '400': { description: Invalid transition }
